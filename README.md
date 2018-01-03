@@ -6,4 +6,17 @@
  - [OCaml makefile](http://mmottl.github.io/ocaml-makefile/)
  - http://www.ccs.neu.edu/home/matthias/HtDP2e/
  - http://esumii.github.io/min-caml/
- 
+
+ ## memo
+
+ Run REPL
+
+ ```
+ > ocaml
+ ```
+
+ Exit REPL
+
+ ```
+# exit 0;;
+ ```
