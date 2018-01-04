@@ -16,3 +16,13 @@ let seiseki p = match p with (name, grade) -> name ^ "さんの評価は" ^ grad
 (* tests *)
 let test_seiseki1 = seiseki ("鈴木", "A") = "鈴木さんの評価はAです"
 let test_seiseki2 = seiseki ("佐藤", "B") = "佐藤さんの評価はBです"
+
+(* 7.4. 平面座標 (x, y) を2つ受け取ってそれらの中点を算出する *)
+(* chuten : float * float -> float * float -> float * float *)
+let chuten coord1 coord2 =
+  match coord1 with (x1, y1) -> match coord2 with (x2, y2) -> ((x1 +. x2) /. 2.0, (y1 +. y2) /. 2.0)
+
+(* tests *)
+let test_chuten1 = chuten (10.0, 4.0) (3.0, (-3.0)) = (6.5, 0.5)
+let test_chuten2 = chuten (1.0, 1.0) (1.0, 1.0) = (1.0, 1.0)
+let test_chuten2 = chuten (0.0, 0.0) (0.0, 0.0) = (0.0, 0.0)
