@@ -57,3 +57,80 @@ let rec concat l = match l with
 
 let test_9_6_1 = concat [] = ""
 let test_9_6_2 = concat seasons = "SpringSummerAutumnWinter"
+
+(* 9.7 *)
+(* count_ketsueki_A : person_t list -> int *)
+let rec count_ketsueki_A l = match l with
+    [] -> 0
+    | { name = n;
+        height = h;
+        weight = w;
+        birth_month = m;
+        birth_day = d;
+        blood_type = bt
+        }::xs -> if bt = "A"
+                    then 1 + count_ketsueki_A xs
+                    else count_ketsueki_A xs
+
+(* test data *)
+let people_no_A = [
+    {name = "Adam"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "O"};
+    {name = "Adam"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "B"};
+    {name = "Adam"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "AB"};
+]
+let people_include_A = [
+    {name = "Adam"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "O"};
+    {name = "Adam"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "A"};
+    {name = "Adam"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "AB"};
+]
+let people_all_A = [
+    {name = "Adam"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "A"};
+    {name = "Adam"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "A"};
+    {name = "Adam"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "A"};
+]
+
+(* tests *)
+let test_9_7_1 = count_ketsueki_A [] = 0
+let test_9_7_2 = count_ketsueki_A people_no_A = 0
+let test_9_7_3 = count_ketsueki_A people_include_A = 1
+let test_9_7_4 = count_ketsueki_A people_all_A = length people_all_A
+
+(* 9.8 *)
+(* is_virgo : int -> int -> bool *)
+let is_virgo m d = (m = 8 && 22 < d && d <= 31) || (m = 9 && 0 < d && d <= 22)
+
+(* person_names_virgo : person_t -> string list *)
+let rec person_names_virgo l = match l with
+    [] -> []
+    | { name = n;
+        height = h;
+        weight = w;
+        birth_month = m;
+        birth_day = d;
+        blood_type = bt
+        }::xs -> if is_virgo m d
+                          then n :: person_names_virgo xs
+                          else person_names_virgo xs
+
+(* test data *)
+let people_no_virgo = [
+    {name = "Adam"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "O"};
+    {name = "Bob"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "B"};
+    {name = "Chris"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "AB"};
+]
+let people_include_virgo = [
+    {name = "Adam"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "O"};
+    {name = "Bob"; height = 178.0; weight = 70.1; birth_month = 9; birth_day = 1; blood_type = "A"};
+    {name = "Chris"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 3; blood_type = "AB"};
+]
+let people_all_virgo = [
+    {name = "Adam"; height = 178.0; weight = 70.1; birth_month = 9; birth_day = 22; blood_type = "A"};
+    {name = "Bob"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 31; blood_type = "A"};
+    {name = "Chris"; height = 178.0; weight = 70.1; birth_month = 8; birth_day = 23; blood_type = "A"};
+]
+
+(* tests *)
+let test_9_8_1 = person_names_virgo [] = []
+let test_9_8_2 = person_names_virgo people_no_virgo = []
+let test_9_8_3 = person_names_virgo people_include_virgo = ["Bob"]
+let test_9_8_4 = person_names_virgo people_all_virgo = ["Adam"; "Bob"; "Chris"]
