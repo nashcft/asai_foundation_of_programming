@@ -124,3 +124,49 @@ let students = [alice; bob; carol]
 (* tests *)
 let test_10_5_1 = gakusei_max [] = n_a_student
 let test_10_5_2 = gakusei_max students = bob
+
+(* 10.7 *)
+let rec ketsueki_shukei (l: person_t list) : int*int*int*int = match l with
+    [] -> (0, 0, 0, 0)
+    | { name = n; height = h; weight = w; birth_month = m; birth_day = d; blood_type = bt }::xs ->
+        let (a, b, o, ab) = ketsueki_shukei xs in 
+            if bt = "A" then (a + 1, b, o, ab)
+            else if bt = "B" then (a, b + 1, o, ab)
+            else if bt = "O" then (a, b, o + 1, ab)
+            else (a, b, o, ab + 1)
+
+(* test data *)
+let people_2 = [
+    { name = "Alice"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "A" };
+    { name = "Bob"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "B" };
+    { name = "Adam"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "O" };
+    { name = "Carol"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "AB" };
+    { name = "Ben"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "O" }
+]
+
+(* test *)
+let test_10_7_1 = ketsueki_shukei [] = (0, 0, 0, 0)
+let test_10_7_2 = ketsueki_shukei people_2 = (1, 1, 2, 1)
+let test_10_7_3 = ketsueki_shukei people = (5, 0, 0, 0)
+
+(* 10.8 *)
+let rec saita_ketdueki (l: person_t list) : string = match l with
+    [] -> "No entry"
+    | x::xs -> 
+        let (a, b, o, ab) = ketsueki_shukei l in
+        let max_bt = max (max a b) (max o ab) in
+        if max_bt = a then "A"
+        else if max_bt = b then "B"
+        else if max_bt = o then "O"
+        else "AB"
+
+(* tests *)
+let test_10_8_1 = saita_ketdueki [] = "No entry"
+let test_10_8_2 = saita_ketdueki people = "A"
+let test_10_8_3 = saita_ketdueki people_2 = "O"
+let test_10_8_4 = saita_ketdueki [
+    { name = "Alice"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "A" };
+    { name = "Bob"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "B" };
+    { name = "Adam"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "O" };
+    { name = "Carol"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "AB" }
+] = "A"
