@@ -4,7 +4,7 @@ let rec insert (l: int list) (n: int) : int list = match l with
     [] -> n :: []
     | x::xs -> if x <= n
                   then x :: insert xs n
-                  else n :: x :: xs
+                  else n :: l
 
 (* tests *)
 let test_10_1_1 = insert [] 0 = [0]
@@ -37,7 +37,7 @@ let rec insert (l: gakusei_t list) (g: gakusei_t) : gakusei_t list = match l wit
     [] -> g::[]
     | ({ name = lnm; score = lsc; grade = lgr; } as x)::xs -> 
         (match g with { name = nm; score = sc; grade = gr; } -> 
-            if lsc >= sc then x :: insert xs g else g :: x :: xs)
+            if lsc >= sc then x :: insert xs g else g :: l)
 
 let rec gakusei_sort (l: gakusei_t list) : gakusei_t list = match l with
     [] -> []
@@ -74,7 +74,7 @@ let rec insert (l: person_t list) (p: person_t) : person_t list = match l with
     [] -> p :: []
     | ({ name = ln; height = lh; weight = lw; birth_month = lm; birth_day = ld; blood_type = lb } as x)::xs -> 
         (match p with { name = n; height = h; weight = w; birth_month = m; birth_day = d; blood_type = b } -> 
-            if ln <= n then x :: insert xs p else p :: x :: xs)
+            if ln <= n then x :: insert xs p else p :: l)
 
 let rec person_sort (l: person_t list) : person_t list = match l with 
     [] -> []
