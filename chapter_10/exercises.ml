@@ -25,3 +25,78 @@ let test_10_2_2 = ins_sort [5; 3; 8; 1; 7; 4] = [1; 3; 4; 5; 7; 8]
 let test_10_2_3 = ins_sort [5; 4; 3; 2; 1] = [1; 2; 3; 4; 5]
 let test_10_2_4 = ins_sort [1; 2; 3; 4; 5] = [1; 2; 3; 4; 5]
 let test_10_2_5 = ins_sort [4; 7; 3; 1; 5; 3; 2; 4] = [1; 2; 3; 3; 4; 4; 5; 7]
+
+(* 10.3 *)
+type gakusei_t = {
+    name: string;
+    score: int;
+    grade: string;
+}
+
+let rec insert (l: gakusei_t list) (g: gakusei_t) : gakusei_t list = match l with
+    [] -> g::[]
+    | ({ name = lnm; score = lsc; grade = lgr; } as x)::xs -> 
+        (match g with { name = nm; score = sc; grade = gr; } -> 
+            if lsc >= sc then x :: insert xs g else g :: x :: xs)
+
+let rec gakusei_sort (l: gakusei_t list) : gakusei_t list = match l with
+    [] -> []
+    | x::xs -> insert (gakusei_sort xs) x
+
+(* test data *)
+let students1: gakusei_t list = [
+    { name = ""; score = 70; grade = "B" };
+    { name = ""; score = 75; grade = "B" };
+    { name = ""; score = 68; grade = "C" };
+]
+let students1_sorted: gakusei_t list = [
+    { name = ""; score = 75; grade = "B" };
+    { name = ""; score = 70; grade = "B" };
+    { name = ""; score = 68; grade = "C" };
+]
+
+(* tests *)
+let test_10_3_1 = gakusei_sort [] = []
+let test_10_3_2 = gakusei_sort students1 = students1_sorted
+let test_10_3_3 = gakusei_sort students1_sorted = students1_sorted
+
+(* 10.4 *)
+type person_t = {
+    name : string;
+    height : float;
+    weight : float;
+    birth_month : int;
+    birth_day : int;
+    blood_type : string;
+}
+
+let rec insert (l: person_t list) (p: person_t) : person_t list = match l with
+    [] -> p :: []
+    | ({ name = ln; height = lh; weight = lw; birth_month = lm; birth_day = ld; blood_type = lb } as x)::xs -> 
+        (match p with { name = n; height = h; weight = w; birth_month = m; birth_day = d; blood_type = b } -> 
+            if ln <= n then x :: insert xs p else p :: x :: xs)
+
+let rec person_sort (l: person_t list) : person_t list = match l with 
+    [] -> []
+    | x::xs -> insert (person_sort xs) x
+
+(* test data *)
+let people = [
+    { name = "Alice"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "A" };
+    { name = "Bob"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "A" };
+    { name = "Adam"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "A" };
+    { name = "Carol"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "A" };
+    { name = "Ben"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "A" }
+]
+let people_sorted = [
+    { name = "Adam"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "A" };
+    { name = "Alice"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "A" };
+    { name = "Ben"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "A" };
+    { name = "Bob"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "A" };
+    { name = "Carol"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "A" }
+]
+
+(* tests *)
+let test_10_4_1 = person_sort [] = []
+let test_10_4_2 = person_sort people = people_sorted
+let test_10_4_3 = person_sort people_sorted = people_sorted
