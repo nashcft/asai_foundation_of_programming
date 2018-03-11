@@ -100,3 +100,27 @@ let people_sorted = [
 let test_10_4_1 = person_sort [] = []
 let test_10_4_2 = person_sort people = people_sorted
 let test_10_4_3 = person_sort people_sorted = people_sorted
+
+exception Empty
+
+(* 10.5, 10.6 *)
+let get_score g = match g with { name = n; score =s; grade = g } -> s
+
+let n_a_student = { name = "N/A"; score = min_int; grade = "N/A" }
+
+let rec gakusei_max (l: gakusei_t list) : gakusei_t = match l with
+    [] -> n_a_student
+    | ({ name = n; score = s; grade = g} as x)::xs -> 
+        let max_xs = gakusei_max xs in
+            if s >= get_score max_xs then x else max_xs
+
+(* test data *)
+let alice = { name = "Alice"; score = 70; grade = "B" }
+let bob = { name = "Bob"; score = 75; grade = "B" }
+let carol = { name = "Carol"; score = 65; grade = "C" }
+
+let students = [alice; bob; carol]
+
+(* tests *)
+let test_10_5_1 = gakusei_max [] = n_a_student
+let test_10_5_2 = gakusei_max students = bob
