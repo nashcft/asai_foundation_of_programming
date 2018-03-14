@@ -361,3 +361,41 @@ let global_ekikan_list = [
 {kiten="営団赤塚"; shuten="営団成増"; keiyu="有楽町線"; kyori=1.5; jikan=2}; 
 {kiten="営団成増"; shuten="和光市"; keiyu="有楽町線"; kyori=2.1; jikan=3}; 
 ] 
+
+(* 10.10 *)
+let rec romaji_to_kanji (name: string) (l: ekimei_t list) : string = match l with
+    [] -> ""
+    | {kanji = kj; kana = kn; romaji = r; shozoku = s}::xs ->
+        if name = r then kj else romaji_to_kanji name xs
+
+(* 10.10 tests *)
+let test_10_10_1 = (romaji_to_kanji "myogadani" global_ekimei_list) = "茗荷谷"
+let test_10_10_2 = romaji_to_kanji "shinjuku" global_ekimei_list = "新宿"
+
+(* 10.11 *)
+let rec get_ekikan_kyori (s1: string) (s2: string) (l: ekikan_t list) : float = match l with
+    [] -> max_float
+    | {kiten = h; shuten = t; keiyu = e; kyori = dist; jikan = dur}::xs ->
+        if (h = s1 && t = s2) || (h = s2 && t = s1) then dist else get_ekikan_kyori s1 s2 xs
+
+(* 10.11 tests *)
+let test_10_11_1 = get_ekikan_kyori "飯田橋" "神楽坂" global_ekikan_list = 1.2
+let test_10_11_2 = get_ekikan_kyori "中野" "落合" global_ekikan_list = 2.0
+let test_10_11_3 = get_ekikan_kyori "新橋" "中野" global_ekikan_list = max_float
+
+(* 10.12 *)
+let rec kyori_wo_hyoji (s1: string) (s2: string) : string = 
+    let station_1 = romaji_to_kanji s1 global_ekimei_list in
+    let station_2 = romaji_to_kanji s2 global_ekimei_list in
+    let dist = get_ekikan_kyori station_1 station_2 global_ekikan_list in
+        if station_1 = "" then s1 ^ "という駅名は存在しません"
+        else if station_2 = "" then s2 ^ "という駅名は存在しません"
+        else if dist = max_float then station_1 ^ "と" ^ station_2 ^ "はつながっていません"
+        else station_1 ^ "から" ^ station_2 ^ "までは" ^ (string_of_float dist) ^ "kmです"
+
+(* 10.12 tests *)
+let test_10_12_1 = kyori_wo_hyoji "iidabashi" "kagurazaka" = "飯田橋から神楽坂までは1.2kmです"
+let test_10_12_2 = kyori_wo_hyoji "nakano" "ochiai" = "中野から落合までは2.kmです"
+let test_10_12_3 = kyori_wo_hyoji "shinbashi" "nakano" = "新橋と中野はつながっていません"
+let test_10_12_4 = kyori_wo_hyoji "ryogoku" "ueno" = "ryogokuという駅名は存在しません"
+let test_10_12_5 = kyori_wo_hyoji "ueno" "yoyogi" = "yoyogiという駅名は存在しません" 
