@@ -170,3 +170,15 @@ let test_10_8_4 = saita_ketdueki [
     { name = "Adam"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "O" };
     { name = "Carol"; height = 162.1; weight = 49.7; birth_month = 8; birth_day = 18; blood_type = "AB" }
 ] = "A"
+
+(* 10.9 *)
+let rec equal_length l1 l2 = match (l1, l2) with
+    ([], []) -> true
+    | ([], x::xs) -> false
+    | (x::xs, []) -> false
+    | (x1::xs1, x2::xs2) -> equal_length xs1 xs2
+
+(* tests *)
+let test_10_9_1 = equal_length [1; 1; 1] [1; 1; 1] = true
+let test_10_9_2 = equal_length [1; 1] [1; 1; 1] = false
+let test_10_9_2 = equal_length [1; 1; 1] [1] = false
