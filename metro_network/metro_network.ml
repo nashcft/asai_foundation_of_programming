@@ -399,3 +399,51 @@ let test_10_12_2 = kyori_wo_hyoji "nakano" "ochiai" = "中野から落合まで�
 let test_10_12_3 = kyori_wo_hyoji "shinbashi" "nakano" = "新橋と中野はつながっていません"
 let test_10_12_4 = kyori_wo_hyoji "ryogoku" "ueno" = "ryogokuという駅名は存在しません"
 let test_10_12_5 = kyori_wo_hyoji "ueno" "yoyogi" = "yoyogiという駅名は存在しません" 
+
+(* 12.1 *)
+type eki_t = {
+    namae: string;
+    saitan_kyori: float;
+    temae_list: string list;
+}
+
+(* 12.2 *)
+let rec make_eki_list (l: ekimei_t list) : eki_t list = match l with
+    [] -> []
+    | { kanji = kj; kana = kn; romaji = r; shozoku = s}::xs -> 
+        { namae = kj; saitan_kyori = max_float; temae_list = []} :: make_eki_list xs
+
+(* 12.2 test *)
+let test_12_2_1 = make_eki_list [] = []
+let test_12_2_2 = make_eki_list [{ kanji = "荻窪"; kana = "おぎくぼ"; romaji = "ogikubo"; shozoku = "丸ノ内線" }] =
+                                    [{ namae = "荻窪"; saitan_kyori = max_float; temae_list = []}]
+let test_12_2_3 = make_eki_list [
+    { kanji = "荻窪"; kana = "おぎくぼ"; romaji = "ogikubo"; shozoku = "丸ノ内線" };
+    { kanji = "渋谷"; kana = "しぶや"; romaji = "shibuya"; shozoku = "銀座線" };
+    { kanji = "王子"; kana = "おうじ"; romaji = "oji"; shozoku = "南北線" }
+] = [
+    { namae = "荻窪"; saitan_kyori = max_float; temae_list = [] };
+    { namae = "渋谷"; saitan_kyori = max_float; temae_list = [] };
+    { namae = "王子"; saitan_kyori = max_float; temae_list = [] }
+]
+
+let eki_list = make_eki_list global_ekimei_list
+
+(* 12.3 *)
+let rec shokika (l: eki_t list) (target: string) : eki_t list = match l with
+    [] -> []
+    | ({ namae = n; saitan_kyori = d; temae_list = l} as x)::xs -> 
+        if n = target then { namae = n; saitan_kyori = 0.; temae_list = n :: l } :: xs
+            else x :: shokika xs target
+
+
+(* 12.3 tests *)
+let rec validate (l: eki_t list) (target: string) : bool = match l with
+    [] -> false
+    | { namae = n; saitan_kyori = d; temae_list = l }::xs -> 
+        if n = target then (d = 0. && l = [target]) else validate xs target
+
+let test_12_3_1 = validate (shokika [] "") "" = false
+let test_12_3_2 = validate (shokika eki_list "荻窪") "荻窪" = true
+let test_12_3_4 = validate (shokika eki_list "新宿") "新宿" = true
+let test_12_3_4 = validate (shokika eki_list "荻窪") "王子" = false
