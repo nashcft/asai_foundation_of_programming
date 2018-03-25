@@ -447,3 +447,43 @@ let test_12_3_1 = validate (shokika [] "") "" = false
 let test_12_3_2 = validate (shokika eki_list "荻窪") "荻窪" = true
 let test_12_3_4 = validate (shokika eki_list "新宿") "新宿" = true
 let test_12_3_4 = validate (shokika eki_list "荻窪") "王子" = false
+
+(* 12.4 *)
+let rec insert (l: ekimei_t list) (s: ekimei_t) : ekimei_t list = match l with
+    [] -> [s]
+    | ({ kanji = kj; kana = kn;  romaji = ro; shozoku = sh } as x)::xs ->
+        match s with { kanji = skj; kana = skn; romaji = sro; shozoku = ssh } ->
+            if kn < skn then x :: insert xs s
+                else if kn = skn then insert xs s
+                else s :: l
+
+let rec seiretsu (l: ekimei_t list) : ekimei_t list = match l with
+    [] -> []
+    | x::xs -> insert (seiretsu xs) x
+
+(* 12.4 tests *)
+let test_12_4_1 = seiretsu [
+    {kanji="北千住"; kana="きたせんじゅ"; romaji="kitasenjyu"; shozoku="千代田線"};
+    {kanji="綾瀬"; kana="あやせ"; romaji="ayase"; shozoku="千代田線"};
+    {kanji="北綾瀬"; kana="きたあやせ"; romaji="kitaayase"; shozoku="千代田線"}
+] = [
+    {kanji="綾瀬"; kana="あやせ"; romaji="ayase"; shozoku="千代田線"};
+    {kanji="北綾瀬"; kana="きたあやせ"; romaji="kitaayase"; shozoku="千代田線"};
+    {kanji="北千住"; kana="きたせんじゅ"; romaji="kitasenjyu"; shozoku="千代田線"}
+]
+let test_12_4_2 = seiretsu [
+    {kanji="外苑前"; kana="がいえんまえ"; romaji="gaienmae"; shozoku="銀座線"};
+    {kanji="表参道"; kana="おもてさんどう"; romaji="omotesando"; shozoku="銀座線"};
+    {kanji="渋谷"; kana="しぶや"; romaji="shibuya"; shozoku="銀座線"};
+    {kanji="渋谷"; kana="しぶや"; romaji="shibuya"; shozoku="半蔵門線"};
+    {kanji="表参道"; kana="おもてさんどう"; romaji="omotesandou"; shozoku="半蔵門線"};
+    {kanji="青山一丁目"; kana="あおやまいっちょうめ"; romaji="aoyama-itchome"; shozoku="半蔵門線"};
+    {kanji="永田町"; kana="ながたちょう"; romaji="nagatacho"; shozoku="半蔵門線"}
+] = [
+    {kanji="青山一丁目"; kana="あおやまいっちょうめ"; romaji="aoyama-itchome"; shozoku="半蔵門線"};
+    {kanji="表参道"; kana="おもてさんどう"; romaji="omotesando"; shozoku="銀座線"};
+    {kanji="外苑前"; kana="がいえんまえ"; romaji="gaienmae"; shozoku="銀座線"};
+    {kanji="渋谷"; kana="しぶや"; romaji="shibuya"; shozoku="銀座線"};
+    {kanji="永田町"; kana="ながたちょう"; romaji="nagatacho"; shozoku="半蔵門線"}
+]
+let test_12_4_3 = List.length (seiretsu global_ekimei_list) < List.length global_ekimei_list
