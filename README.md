@@ -20,3 +20,10 @@
  ```
 # exit 0;;
  ```
+
+ Load file from REPL
+
+ ```
+# #use "filename.ml";;
+ ```
+- It seems that files only in current directory can be loaded
