@@ -374,14 +374,14 @@ let test_10_10_2 = romaji_to_kanji "shinjuku" global_ekimei_list = "新宿"
 
 (* 10.11 *)
 let rec get_ekikan_kyori (s1: string) (s2: string) (l: ekikan_t list) : float = match l with
-    [] -> max_float
+    [] -> infinity
     | {kiten = h; shuten = t; keiyu = e; kyori = dist; jikan = dur}::xs ->
         if (h = s1 && t = s2) || (h = s2 && t = s1) then dist else get_ekikan_kyori s1 s2 xs
 
 (* 10.11 tests *)
 let test_10_11_1 = get_ekikan_kyori "飯田橋" "神楽坂" global_ekikan_list = 1.2
 let test_10_11_2 = get_ekikan_kyori "中野" "落合" global_ekikan_list = 2.0
-let test_10_11_3 = get_ekikan_kyori "新橋" "中野" global_ekikan_list = max_float
+let test_10_11_3 = get_ekikan_kyori "新橋" "中野" global_ekikan_list = infinity
 
 (* 10.12 *)
 let rec kyori_wo_hyoji (s1: string) (s2: string) : string = 
@@ -390,7 +390,7 @@ let rec kyori_wo_hyoji (s1: string) (s2: string) : string =
     let dist = get_ekikan_kyori station_1 station_2 global_ekikan_list in
         if station_1 = "" then s1 ^ "という駅名は存在しません"
         else if station_2 = "" then s2 ^ "という駅名は存在しません"
-        else if dist = max_float then station_1 ^ "と" ^ station_2 ^ "はつながっていません"
+        else if dist = infinity then station_1 ^ "と" ^ station_2 ^ "はつながっていません"
         else station_1 ^ "から" ^ station_2 ^ "までは" ^ (string_of_float dist) ^ "kmです"
 
 (* 10.12 tests *)
@@ -411,20 +411,20 @@ type eki_t = {
 let rec make_eki_list (l: ekimei_t list) : eki_t list = match l with
     [] -> []
     | { kanji = kj; kana = kn; romaji = r; shozoku = s}::xs -> 
-        { namae = kj; saitan_kyori = max_float; temae_list = []} :: make_eki_list xs
+        { namae = kj; saitan_kyori = infinity; temae_list = []} :: make_eki_list xs
 
 (* 12.2 test *)
 let test_12_2_1 = make_eki_list [] = []
 let test_12_2_2 = make_eki_list [{ kanji = "荻窪"; kana = "おぎくぼ"; romaji = "ogikubo"; shozoku = "丸ノ内線" }] =
-                                    [{ namae = "荻窪"; saitan_kyori = max_float; temae_list = []}]
+                                    [{ namae = "荻窪"; saitan_kyori = infinity; temae_list = []}]
 let test_12_2_3 = make_eki_list [
     { kanji = "荻窪"; kana = "おぎくぼ"; romaji = "ogikubo"; shozoku = "丸ノ内線" };
     { kanji = "渋谷"; kana = "しぶや"; romaji = "shibuya"; shozoku = "銀座線" };
     { kanji = "王子"; kana = "おうじ"; romaji = "oji"; shozoku = "南北線" }
 ] = [
-    { namae = "荻窪"; saitan_kyori = max_float; temae_list = [] };
-    { namae = "渋谷"; saitan_kyori = max_float; temae_list = [] };
-    { namae = "王子"; saitan_kyori = max_float; temae_list = [] }
+    { namae = "荻窪"; saitan_kyori = infinity; temae_list = [] };
+    { namae = "渋谷"; saitan_kyori = infinity; temae_list = [] };
+    { namae = "王子"; saitan_kyori = infinity; temae_list = [] }
 ]
 
 let eki_list = make_eki_list global_ekimei_list
@@ -487,3 +487,40 @@ let test_12_4_2 = seiretsu [
     {kanji="永田町"; kana="ながたちょう"; romaji="nagatacho"; shozoku="半蔵門線"}
 ]
 let test_12_4_3 = List.length (seiretsu global_ekimei_list) < List.length global_ekimei_list
+
+(* 13.6 *)
+let koushin1 (p: eki_t) (q: eki_t) : eki_t = 
+    match p with { namae = pn; saitan_kyori = pd; temae_list = pl} ->
+    match q with { namae = qn; saitan_kyori = qd; temae_list = ql} ->
+    let dist = get_ekikan_kyori pn qn global_ekikan_list in
+        if dist +. pd < qd
+            then { namae = qn; saitan_kyori = dist +. pd; temae_list = qn::pl }
+            else q
+
+(* 13.6 tests *)
+let test_13_6_1 = koushin1 { namae = "渋谷"; saitan_kyori = 0.; temae_list = ["渋谷"] } 
+                           { namae = "表参道"; saitan_kyori = infinity; temae_list = [] }
+                           = { namae = "表参道"; saitan_kyori = 1.3; temae_list = ["表参道"; "渋谷"] }
+let test_13_6_2 = koushin1 { namae = "渋谷"; saitan_kyori = 0.; temae_list = ["渋谷"] } 
+                           { namae = "新宿"; saitan_kyori = infinity; temae_list = [] }
+                           = { namae = "新宿"; saitan_kyori = infinity; temae_list = [] }
+let test_13_6_3 = koushin1 { namae = "池袋"; saitan_kyori = 14.; temae_list = ["池袋"; "要町"; "千川"] } 
+                           { namae = "新大塚"; saitan_kyori = 20.; temae_list = ["foo"; "bar"] }
+                           = { namae = "新大塚"; saitan_kyori = 15.8; temae_list = ["新大塚"; "池袋"; "要町"; "千川"] }
+let test_13_6_3 = koushin1 { namae = "池袋"; saitan_kyori = 14.; temae_list = ["池袋"; "要町"; "千川"] } 
+                           { namae = "新大塚"; saitan_kyori = 15.5; temae_list = ["foo"; "bar"] }
+                           = { namae = "新大塚"; saitan_kyori = 15.5; temae_list = ["foo"; "bar"] }
+
+(* 13.7 *)
+let koushin (p: eki_t) (v: eki_t list) : eki_t list = List.map (koushin1 p) v
+
+(* test data *)
+let s1 = { namae = "護国寺"; saitan_kyori = infinity; temae_list = [] }
+let s2 = { namae = "江戸川橋"; saitan_kyori = 12.; temae_list = ["江戸川橋"; "飯田橋"] }
+let s3 = { namae = "飯田橋"; saitan_kyori = 0.; temae_list = ["c"] }
+let s4 = { namae = "市ヶ谷"; saitan_kyori = infinity; temae_list = [] }
+
+(* 13.7 tests *)
+let test_13_7_1 = koushin s1 [] = []
+let test_13_7_2 = koushin s2 [s1; s2; s3; s4]
+                = [{ namae = "護国寺"; saitan_kyori = 13.3; temae_list = ["護国寺"; "江戸川橋"; "飯田橋"] }; s2; s3; s4]
