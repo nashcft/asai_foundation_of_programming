@@ -27,3 +27,24 @@ let test_14_2_4 = count_A [
     { name = ""; score = 1; grade = "A" };
     { name = ""; score = 1; grade = "A" }
 ] = 2
+
+(* 14.3 *)
+let concat_strings s1 s2 = s1 ^ s2
+let concat (l: string list) : string = List.fold_right concat_strings l ""
+
+(* 14.3 tests *)
+let test_14_3_1 = concat [] = ""
+let test_14_3_2 = concat ["a"; "b"; "c"] = "abc"
+
+(* 14.4 *)
+let sum_score (s: gakusei_t) (n: int) : int = match s with
+    { name = nm; score = sc; grade = gr } -> sc + n
+let gakusei_sum (l: gakusei_t list) : int = List.fold_right sum_score l 0
+
+(* 14.4 tests *)
+let test_14_4_1 = gakusei_sum [] = 0
+let test_14_4_2 = gakusei_sum [
+    { name  = ""; score = 10; grade = "E" };
+    { name  = ""; score = 46; grade = "E" };
+    { name  = ""; score = 90; grade = "E" };
+] = 146
