@@ -408,7 +408,7 @@ type eki_t = {
 }
 
 (* 12.2 *)
-let rec make_eki_list (l: ekimei_t list) : eki_t list = 
+let make_eki_list (l: ekimei_t list) : eki_t list = 
     List.map (fun ekimei -> match ekimei with 
         { kanji = kj; kana = kn; romaji = r; shozoku = s} -> 
             { namae = kj; saitan_kyori = infinity; temae_list = []}) l
@@ -430,7 +430,7 @@ let test_12_2_3 = make_eki_list [
 let eki_list = make_eki_list global_ekimei_list
 
 (* 12.3 *)
-let rec shokika (l: eki_t list) (target: string) : eki_t list = 
+let shokika (l: eki_t list) (target: string) : eki_t list = 
     List.map (fun sta -> match sta with
         { namae = n; saitan_kyori = d; temae_list = l} -> 
             if n = target then { namae = n; saitan_kyori = 0.; temae_list = n :: l } else sta) l
@@ -527,12 +527,11 @@ let test_13_7_2 = koushin s2 [s1; s2; s3; s4]
 
 (* 14.12 *)
 let make_initial_eki_list (l: ekimei_t list) (target: string) : eki_t list =
-    List.map (fun sta -> match sta with
-        { namae = n; saitan_kyori = d; temae_list = l} ->
-            if n = target then { namae = n; saitan_kyori = 0.; temae_list = n :: l } else sta)
-        (List.map (fun ekimei -> match ekimei with
-            { kanji = kj; kana = kn; romaji = r; shozoku = s} ->
-                { namae = kj; saitan_kyori = infinity; temae_list = []}) l)
+    List.map (fun ekimei -> match ekimei with
+        { kanji = kj; kana = kn; romaji = r; shozoku = s} ->
+            if kj = target
+                then { namae = kj; saitan_kyori = 0.; temae_list = [kj] }
+                else { namae = kj; saitan_kyori = infinity; temae_list = []}) l
 
 (* 14.12 tests *)
 let test_14_12_1 = validate (make_initial_eki_list [] "") "" = false
