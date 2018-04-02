@@ -408,10 +408,10 @@ type eki_t = {
 }
 
 (* 12.2 *)
-let rec make_eki_list (l: ekimei_t list) : eki_t list = match l with
-    [] -> []
-    | { kanji = kj; kana = kn; romaji = r; shozoku = s}::xs -> 
-        { namae = kj; saitan_kyori = infinity; temae_list = []} :: make_eki_list xs
+let rec make_eki_list (l: ekimei_t list) : eki_t list = 
+    List.map (fun ekimei -> match ekimei with 
+        { kanji = kj; kana = kn; romaji = r; shozoku = s} -> 
+            { namae = kj; saitan_kyori = infinity; temae_list = []}) l
 
 (* 12.2 test *)
 let test_12_2_1 = make_eki_list [] = []
@@ -430,11 +430,10 @@ let test_12_2_3 = make_eki_list [
 let eki_list = make_eki_list global_ekimei_list
 
 (* 12.3 *)
-let rec shokika (l: eki_t list) (target: string) : eki_t list = match l with
-    [] -> []
-    | ({ namae = n; saitan_kyori = d; temae_list = l} as x)::xs -> 
-        if n = target then { namae = n; saitan_kyori = 0.; temae_list = n :: l } :: xs
-            else x :: shokika xs target
+let rec shokika (l: eki_t list) (target: string) : eki_t list = 
+    List.map (fun sta -> match sta with
+        { namae = n; saitan_kyori = d; temae_list = l} -> 
+            if n = target then { namae = n; saitan_kyori = 0.; temae_list = n :: l } else sta) l
 
 
 (* 12.3 tests *)
@@ -490,14 +489,16 @@ let test_12_4_3 = List.length (seiretsu global_ekimei_list) < List.length global
 
 (* 13.6, 13.7, 14.7 *)
 let koushin (p: eki_t) (v: eki_t list) : eki_t list = 
-    let koushin1 (p: eki_t) (q: eki_t) : eki_t = 
+    List.map (
+        (fun (p: eki_t) (q: eki_t) ->
         match p with { namae = pn; saitan_kyori = pd; temae_list = pl} ->
         match q with { namae = qn; saitan_kyori = qd; temae_list = ql} ->
         let dist = get_ekikan_kyori pn qn global_ekikan_list in
             if dist +. pd < qd
                 then { namae = qn; saitan_kyori = dist +. pd; temae_list = qn::pl }
-                else q
-    in List.map (koushin1 p) v
+                else q)
+        p
+    ) v
 
 (* 13.6 tests
 let test_13_6_1 = koushin1 { namae = "渋谷"; saitan_kyori = 0.; temae_list = ["渋谷"] } 
@@ -523,3 +524,18 @@ let s4 = { namae = "市ヶ谷"; saitan_kyori = infinity; temae_list = [] }
 let test_13_7_1 = koushin s1 [] = []
 let test_13_7_2 = koushin s2 [s1; s2; s3; s4]
                 = [{ namae = "護国寺"; saitan_kyori = 13.3; temae_list = ["護国寺"; "江戸川橋"; "飯田橋"] }; s2; s3; s4]
+
+(* 14.12 *)
+let make_initial_eki_list (l: ekimei_t list) (target: string) : eki_t list =
+    List.map (fun sta -> match sta with
+        { namae = n; saitan_kyori = d; temae_list = l} ->
+            if n = target then { namae = n; saitan_kyori = 0.; temae_list = n :: l } else sta)
+        (List.map (fun ekimei -> match ekimei with
+            { kanji = kj; kana = kn; romaji = r; shozoku = s} ->
+                { namae = kj; saitan_kyori = infinity; temae_list = []}) l)
+
+(* 14.12 tests *)
+let test_14_12_1 = validate (make_initial_eki_list [] "") "" = false
+let test_14_12_2 = validate (make_initial_eki_list global_ekimei_list "荻窪") "荻窪" = true
+let test_14_12_4 = validate (make_initial_eki_list global_ekimei_list "新宿") "新宿" = true
+let test_14_12_4 = validate (make_initial_eki_list global_ekimei_list "荻窪") "王子" = false
