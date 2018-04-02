@@ -30,7 +30,7 @@ let test_14_2_3 = count_A [{ name = ""; score = 1; grade = "B" }; { name = ""; s
 let test_14_2_4 = count_A slist = 2
 
 (* 14.3 *)
-let concat (l: string list) : string = List.fold_right (fun s1 s2 -> s1 ^ s2) l ""
+let concat (l: string list) : string = List.fold_right (^) l ""
 
 (* 14.3 tests *)
 let test_14_3_1 = concat [] = ""
