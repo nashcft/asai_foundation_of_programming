@@ -78,3 +78,26 @@ let f14_9 = fun p -> match p with
     birth_month = m;
     birth_day = d;
     blood_type = b } -> n
+
+(* 14.15 *)
+let rec enumerate n = if n = 0 then [] else n :: enumerate (n - 1)
+let one_to_n n =
+    if n < 1 then 0
+    else List.fold_right (+) (enumerate n) 0
+
+(* 14.15 tests *)
+let test_14_15_1 = one_to_n 5 = 15
+let test_14_15_2 = one_to_n 1 = 1
+let test_14_15_3 = one_to_n 0 = 0
+let test_14_15_4 = one_to_n (-1) = 0
+let test_14_15_5 = one_to_n 20 = 210
+
+(* 14.16 *)
+let factorial n =
+    if n < 1 then 1
+    else List.fold_right ( * ) (enumerate n) 1
+
+(* 14.16 tests *)
+let test_14_16_1 = factorial 0 = 1
+let test_14_16_2 = factorial 5 = 120
+let test_14_16_3 = factorial 10 = 3628800
