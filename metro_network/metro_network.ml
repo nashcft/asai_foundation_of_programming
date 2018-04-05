@@ -437,15 +437,15 @@ let shokika (l: eki_t list) (target: string) : eki_t list =
 
 
 (* 12.3 tests *)
-let rec validate (l: eki_t list) (target: string) : bool = match l with
+let rec validate_12_3 (l: eki_t list) (target: string) : bool = match l with
     [] -> false
     | { namae = n; saitan_kyori = d; temae_list = l }::xs -> 
-        if n = target then (d = 0. && l = [target]) else validate xs target
+        if n = target then (d = 0. && l = [target]) else validate_12_3 xs target
 
-let test_12_3_1 = validate (shokika [] "") "" = false
-let test_12_3_2 = validate (shokika eki_list "荻窪") "荻窪" = true
-let test_12_3_4 = validate (shokika eki_list "新宿") "新宿" = true
-let test_12_3_4 = validate (shokika eki_list "荻窪") "王子" = false
+let test_12_3_1 = validate_12_3 (shokika [] "") "" = false
+let test_12_3_2 = validate_12_3 (shokika eki_list "荻窪") "荻窪" = true
+let test_12_3_4 = validate_12_3 (shokika eki_list "新宿") "新宿" = true
+let test_12_3_4 = validate_12_3 (shokika eki_list "荻窪") "王子" = false
 
 (* 12.4 *)
 let rec insert (l: ekimei_t list) (s: ekimei_t) : ekimei_t list = match l with
@@ -534,7 +534,35 @@ let make_initial_eki_list (l: ekimei_t list) (target: string) : eki_t list =
                 else { namae = kj; saitan_kyori = infinity; temae_list = []}) l
 
 (* 14.12 tests *)
-let test_14_12_1 = validate (make_initial_eki_list [] "") "" = false
-let test_14_12_2 = validate (make_initial_eki_list global_ekimei_list "荻窪") "荻窪" = true
-let test_14_12_4 = validate (make_initial_eki_list global_ekimei_list "新宿") "新宿" = true
-let test_14_12_4 = validate (make_initial_eki_list global_ekimei_list "荻窪") "王子" = false
+let test_14_12_1 = validate_12_3 (make_initial_eki_list [] "") "" = false
+let test_14_12_2 = validate_12_3 (make_initial_eki_list global_ekimei_list "荻窪") "荻窪" = true
+let test_14_12_4 = validate_12_3 (make_initial_eki_list global_ekimei_list "新宿") "新宿" = true
+let test_14_12_4 = validate_12_3 (make_initial_eki_list global_ekimei_list "荻窪") "王子" = false
+
+(* 15.4, 15.5 *)
+let saitan_wo_bunri (l: eki_t list) : eki_t*(eki_t list) = match l with
+    [] -> ({namae = ""; saitan_kyori = infinity; temae_list = []}, [])
+    | x::xs -> List.fold_right (fun s (p, v) -> 
+            match s with { namae = sn; saitan_kyori = sd; temae_list = st} -> 
+            match p with { namae = pn; saitan_kyori = pd; temae_list = pt} -> 
+                if sd < pd then (s, p::v) else (p, s::v))
+        xs
+        (x, [])
+
+(* 15.4 tests *)
+let s15_1 = { namae = "a"; saitan_kyori = 12.3; temae_list = ["z"; "x"]}
+let s15_2 = { namae = "b"; saitan_kyori = 2.3; temae_list = ["n"]}
+let s15_3 = { namae = "c"; saitan_kyori = 36.4; temae_list = ["v"]}
+let s15_4 = { namae = "d"; saitan_kyori = 5.6; temae_list = ["c"; "v"]}
+let s15_5 = { namae = "e"; saitan_kyori = 18.4; temae_list = ["r"; "t"; "y"]}
+
+let rec validate_15_4 (p, v) = 
+    match p with { namae = pn; saitan_kyori = pd; temae_list = pt } ->
+    match v with
+        [] -> true
+        | { namae = xn; saitan_kyori = xd; temae_list = xt }::xs -> 
+            if pd <= xd then validate_15_4 (p, xs) else false
+
+let test_15_4_1 = saitan_wo_bunri [] = ({namae = ""; saitan_kyori = infinity; temae_list = []}, [])
+let test_15_4_2 = validate_15_4 (saitan_wo_bunri [s15_1; s15_2; s15_3; s15_4; s15_5])
+let test_15_4_3 = validate_15_4 (saitan_wo_bunri [s15_1; s15_3; s15_1])
