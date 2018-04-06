@@ -2,14 +2,12 @@ type distance_t = {
     distance: float;
     total: float;
 }
-let total_distance l = match l with
-    [] -> []
-    | { distance = d; total = t }::xs ->
-        let rec inner_total_dist il pt = match il with
-            [] -> []
-            | { distance = id; total = it }::ixs ->
-                { distance = id; total = id +. pt } :: inner_total_dist ixs (id +. pt) in
-        { distance = d; total = d +. t } :: inner_total_dist xs (d +. t)
+let total_distance l =
+    let rec inner_total_dist il pt = match il with
+        [] -> []
+        | { distance = d; total = t }::xs ->
+            { distance = d; total = d +. pt } :: inner_total_dist xs (d +. pt) in
+    inner_total_dist l 0.
 
 let test = total_distance [
     { distance = 0.3; total = 0. };
