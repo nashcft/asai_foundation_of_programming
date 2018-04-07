@@ -600,9 +600,9 @@ let test2 = dijkstra "myogadani" "meguro"
 type ekikan_tree_t = Empty
     | Node of string * (string * float) list * ekikan_tree_t * ekikan_tree_t
 
-(* 17.11 *)
-let rec assoc (target: string) (l: (string * float) list) : float = match l with
-    [] -> infinity
+(* 17.11, 18.3 *)
+let rec assoc target (l: ('a * 'b) list) = match l with
+    [] -> raise Not_found
     | (n, d)::xs -> if n = target then d else assoc target xs
 (* 17.11 tests *)
 let test_17_11_1 = assoc "b" [("a", 1.); ("b", 2.); ("c", 3.)] = 2.
