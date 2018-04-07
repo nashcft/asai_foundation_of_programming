@@ -52,3 +52,49 @@ let eg_17_1 =
             Empty,
             Leaf (3)),
         Leaf (24))
+
+let test_tree =
+    Node (2,
+        Node (0,
+            Empty,
+            Leaf (5)),
+        Node (3,
+            Leaf (0),
+            Node (1,
+                Leaf (1),
+                Leaf(1))))
+
+(* 17.5 *)
+let rec tree_double (t: tree_t) : tree_t = match t with
+    Empty -> Empty
+    | Leaf (n) -> Leaf (n * 2)
+    | Node (n, l, r) -> Node(n * 2, tree_double l, tree_double r)
+(* 17.5 tests *)
+let test_17_5_1 = tree_double (Leaf (1)) = Leaf (2)
+let test_17_5_2 = tree_double test_tree =
+    Node(4, (Node (0, Empty, Leaf (10))), Node(6, Leaf(0), Node(2, Leaf (2), Leaf(2))))
+
+(* 17.6 *)
+let rec tree_map (f: int -> int) (t: tree_t) : tree_t = match t with
+    Empty -> Empty
+    | Leaf (n) -> Leaf (f n)
+    | Node (n, l, r) -> Node (f n, tree_map f l, tree_map f r)
+(* 17.6 tests *)
+let test_17_6_1 = tree_map (fun x -> x + 3) test_tree =
+    Node(5, (Node (3, Empty, Leaf (8))), Node(6, Leaf(3), Node(4, Leaf (4), Leaf(4))))
+
+(* 17.7 *)
+let rec tree_length (t: tree_t) : int = match t with
+    Empty -> 0
+    | Leaf (_) -> 1
+    | Node (_, l, r) -> 1 + tree_length l + tree_length r
+(* 17.7 tests *)
+let test_17_7_1 = tree_length test_tree = 8
+
+(* 17.8 *)
+let rec tree_depth (t: tree_t) : int = match t with
+    Empty -> 0
+    | Leaf (_) -> 0
+    | Node (_, l, r) -> 1 + max (tree_depth l) (tree_depth r)
+(* 17.8 tests *)
+let test_17_8_1 = tree_depth test_tree = 3
