@@ -42,9 +42,9 @@ let seiza (y: year_t) : seiza_t = match y with
     | November (d) -> if d <= 22 then Scorpio else Sagittarius
     | December (d) -> if d <= 21 then Sagittarius else Capricorn
 
-type tree_t = Empty
-                | Leaf of int
-                | Node of int * tree_t * tree_t
+type 'a tree_t = Empty
+                | Leaf of 'a
+                | Node of 'a * 'a tree_t * 'a tree_t
 
 let eg_17_1 =
     Node (17,
@@ -65,7 +65,7 @@ let test_tree =
                 Leaf(1))))
 
 (* 17.5 *)
-let rec tree_double (t: tree_t) : tree_t = match t with
+let rec tree_double (t: int tree_t) : int tree_t = match t with
     Empty -> Empty
     | Leaf (n) -> Leaf (n * 2)
     | Node (n, l, r) -> Node(n * 2, tree_double l, tree_double r)
@@ -75,7 +75,7 @@ let test_17_5_2 = tree_double test_tree =
     Node(4, (Node (0, Empty, Leaf (10))), Node(6, Leaf(0), Node(2, Leaf (2), Leaf(2))))
 
 (* 17.6 *)
-let rec tree_map (f: int -> int) (t: tree_t) : tree_t = match t with
+let rec tree_map (f: int -> int) (t: int tree_t) : int tree_t = match t with
     Empty -> Empty
     | Leaf (n) -> Leaf (f n)
     | Node (n, l, r) -> Node (f n, tree_map f l, tree_map f r)
@@ -84,7 +84,7 @@ let test_17_6_1 = tree_map (fun x -> x + 3) test_tree =
     Node(5, (Node (3, Empty, Leaf (8))), Node(6, Leaf(3), Node(4, Leaf (4), Leaf(4))))
 
 (* 17.7 *)
-let rec tree_length (t: tree_t) : int = match t with
+let rec tree_length (t: 'a tree_t) : int = match t with
     Empty -> 0
     | Leaf (_) -> 1
     | Node (_, l, r) -> 1 + tree_length l + tree_length r
@@ -92,9 +92,16 @@ let rec tree_length (t: tree_t) : int = match t with
 let test_17_7_1 = tree_length test_tree = 8
 
 (* 17.8 *)
-let rec tree_depth (t: tree_t) : int = match t with
+let rec tree_depth (t: int tree_t) : int = match t with
     Empty -> 0
     | Leaf (_) -> 0
     | Node (_, l, r) -> 1 + max (tree_depth l) (tree_depth r)
 (* 17.8 tests *)
 let test_17_8_1 = tree_depth test_tree = 3
+
+(* 17.9 *)
+(* int tree_t -> int : + 演算子により要素 n の型が int に確定 *)
+let rec sum_tree t = match t with
+    Empty -> 0
+    | Leaf (n) -> n
+    | Node (n, l, r) -> n + sum_tree l + sum_tree r
