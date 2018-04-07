@@ -41,3 +41,14 @@ let seiza (y: year_t) : seiza_t = match y with
     | October (d) -> if d <= 23 then Libra else Scorpio
     | November (d) -> if d <= 22 then Scorpio else Sagittarius
     | December (d) -> if d <= 21 then Sagittarius else Capricorn
+
+type tree_t = Empty
+                | Leaf of int
+                | Node of int * tree_t * tree_t
+
+let eg_17_1 =
+    Node (17,
+        Node (7,
+            Empty,
+            Leaf (3)),
+        Leaf (24))
