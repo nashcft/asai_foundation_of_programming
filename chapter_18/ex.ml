@@ -23,3 +23,17 @@ let p6 = { name = "6"; height = 1.; weight = 1.; birth_month = 1; birth_day = 1;
 let test_18_1_1 = first_A [p2; p5; p6] = Some p5
 let test_18_1_2 = first_A [p2; p1; p6; p5] = Some p1
 let test_18_1_1 = first_A [p2; p4; p6] = None
+
+(* 18.2 *)
+let rec price item l = match l with
+    [] -> None
+    | (v, p)::xs -> if item = v then Some (p) else price item xs
+let rec count_urikire_yasai (l: string list) (l2: (string*int) list) : int = match l with
+    [] -> 0
+    | x::xs -> match price x l2 with
+        None -> 1 + count_urikire_yasai xs l2
+        | Some (p) -> count_urikire_yasai xs l2
+(* 18.2 tests *)
+let test_18_2_1 = count_urikire_yasai ["a"; "b"] [("a", 1); ("b", 1)] = 0
+let test_18_2_1 = count_urikire_yasai ["a"; "b"] [("a", 1); ("c", 1)] = 1
+let test_18_2_1 = count_urikire_yasai ["a"; "b"] [("c", 1); ("d", 1)] = 2
