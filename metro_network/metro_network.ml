@@ -588,10 +588,9 @@ let dijkstra (start: string) (destination: string) : eki_t =
         | ({ namae = n; saitan_kyori = d; temae_list = l} as x)::xs -> 
             if n = dest_kj then x  else find xs in
     find (
-        dijkstra_main (
-            make_initial_eki_list network 
-            (romaji_to_kanji start network))
-        global_ekikan_list)
+        dijkstra_main
+            (make_initial_eki_list network (romaji_to_kanji start network))
+            global_ekikan_list)
 
 (* tests *)
 let test_dijkstra_1 = dijkstra "shinjuku" "meguro"
@@ -604,3 +603,117 @@ let test_dijkstra_6 = dijkstra "" "nedu"
 (* from support page: http://pllab.is.ocha.ac.jp/~asai/book-data/ex16_5.ml *)
 let test1 = dijkstra "shibuya" "gokokuji"
 let test2 = dijkstra "myogadani" "meguro"
+
+(* 17.10 *)
+type ekikan_tree_t = Empty
+    | Node of string * (string * float) list * ekikan_tree_t * ekikan_tree_t
+
+(* 17.11 *)
+let rec assoc (target: string) (l: (string * float) list) : float = match l with
+    [] -> infinity
+    | (n, d)::xs -> if n = target then d else assoc target xs
+(* 17.11 tests *)
+let test_17_11_1 = assoc "b" [("a", 1.); ("b", 2.); ("c", 3.)] = 2.
+let test_17_11_2 = assoc "z" [("a", 1.); ("b", 2.); ("c", 3.)] = infinity
+
+(* 17.12 *)
+let insert_ekikan (e: ekikan_t) (tree: ekikan_tree_t) : ekikan_tree_t = match e with
+    { kiten = h; shuten = t; keiyu = line; kyori = dist; jikan = dur} -> 
+    let rec upsert_node (n: string) (pair: string * float) (target: ekikan_tree_t) : ekikan_tree_t = match target with
+        Empty -> Node (n, [pair], Empty, Empty)
+        | Node (tn, lst, l, r) -> if n = tn then Node(tn, pair::lst, l, r)
+                                    else if n < tn then Node (tn, lst, upsert_node n pair l, r)
+                                    else Node (tn, lst, l, upsert_node n pair r) in
+    let k_inserted = upsert_node h (t, dist) tree in
+        upsert_node t (h, dist) k_inserted
+(* 17.12 tests *)
+let test_tree1 = 
+    Node ("根津", [("千駄木", 1.); ("湯島", 1.2)],
+        Empty,
+        Empty)
+let test_tree2 = 
+    Node ("根津", [("千駄木", 1.); ("湯島", 1.2)],
+        Node ("新大塚", [("池袋", 1.8)],
+            Empty,
+            Empty),
+        Empty)
+let test_edge = { kiten = "新大塚"; shuten = "茗荷谷"; keiyu = ""; kyori = 1.2; jikan = 2 }
+let test_17_12_1 = insert_ekikan test_edge Empty
+let test_17_12_2 = insert_ekikan test_edge test_tree1
+let test_17_12_3 = insert_ekikan test_edge test_tree2
+
+(* 17.13 *)
+let inserts_ekikan (t: ekikan_tree_t) (l: ekikan_t list) : ekikan_tree_t = List.fold_right insert_ekikan l t
+
+(* 17.14 *)
+let rec get_ekikan_kyori_improved (s1: string) (s2: string) (t: ekikan_tree_t) : float = 
+    let rec find s l = match l with
+        [] -> infinity
+        | (n, dist)::xs -> if n = s then dist else find s xs in
+    match t with
+        Empty -> infinity
+        | Node (n, lst, l, r) -> if n = s1 then find s2 lst
+                                    else if n > s1 then get_ekikan_kyori_improved s1 s2 l
+                                    else get_ekikan_kyori_improved s1 s2 r
+(* 17.14 tests *)
+let test_17_14_1 = get_ekikan_kyori_improved "飯田橋" "神楽坂" (inserts_ekikan Empty global_ekikan_list) = 1.2
+let test_17_14_2 = get_ekikan_kyori_improved "中野" "落合" (inserts_ekikan Empty global_ekikan_list) = 2.0
+let test_17_14_3 = get_ekikan_kyori_improved "新橋" "中野" (inserts_ekikan Empty global_ekikan_list) = infinity
+
+(* 17.15 *)
+let koushin_improved (p: eki_t) (v: eki_t list) (t: ekikan_tree_t) : eki_t list = 
+    List.map (
+        (fun (p: eki_t) (q: eki_t) ->
+        match p with { namae = pn; saitan_kyori = pd; temae_list = pl} ->
+        match q with { namae = qn; saitan_kyori = qd; temae_list = ql} ->
+        let dist = get_ekikan_kyori_improved pn qn t in
+            if dist +. pd < qd
+                then { namae = qn; saitan_kyori = dist +. pd; temae_list = qn::pl }
+                else q)
+        p
+    ) v
+
+let dijkstra_main (v: eki_t list) (g: ekikan_tree_t) : eki_t list =
+    let rec inner_loop u ip iv = match iv with
+        [] -> u
+        | x::xs ->
+            let (new_p, new_v) = saitan_wo_bunri iv in
+            let updated_v = koushin_improved ip new_v g in
+                inner_loop (new_p :: u) new_p updated_v in
+    let (p, v0) = saitan_wo_bunri v in
+        inner_loop [] p v0
+
+let dijkstra_improved (start: string) (destination: string) : eki_t =
+    let network = seiretsu global_ekimei_list in
+    let dest_kj = romaji_to_kanji destination network in
+    let rec find l = match l with
+        [] -> { namae = ""; saitan_kyori = infinity; temae_list = []}
+        | ({ namae = n; saitan_kyori = d; temae_list = l} as x)::xs -> 
+            if n = dest_kj then x  else find xs in
+    find (
+        dijkstra_main
+            (make_initial_eki_list network (romaji_to_kanji start network))
+            (inserts_ekikan Empty global_ekikan_list))
+
+let time f x y = 
+    let t = Sys.time() in
+    let r = f x y in
+    Sys.time() -. t
+
+(* tests *)
+let test_dijkstra_1 = time dijkstra "shinjuku" "meguro"
+let test_dijkstra_2 = time dijkstra "asakusa" "ikebukuro"
+let test_dijkstra_3 = time dijkstra "kitaayase" "wakousi"
+(* tests *)
+let test_dijkstra_imp_1 = time dijkstra_improved "shinjuku" "meguro"
+let test_dijkstra_imp_2 = time dijkstra_improved "asakusa" "ikebukuro"
+let test_dijkstra_imp_3 = time dijkstra_improved "kitaayase" "wakousi"
+
+(*
+val test_dijkstra_1 : float = 0.0551639999999995467
+val test_dijkstra_2 : float = 0.0537260000000001625
+val test_dijkstra_3 : float = 0.0546279999999992327
+val test_dijkstra_imp_1 : float = 0.00744399999999956208
+val test_dijkstra_imp_2 : float = 0.00607999999999986329
+val test_dijkstra_imp_3 : float = 0.00683200000000017127
+*)
