@@ -540,14 +540,11 @@ let test_14_12_4 = validate_12_3 (make_initial_eki_list global_ekimei_list "新�
 let test_14_12_4 = validate_12_3 (make_initial_eki_list global_ekimei_list "荻窪") "王子" = false
 
 (* 15.4, 15.5 *)
-let saitan_wo_bunri (l: eki_t list) : eki_t*(eki_t list) = match l with
-    [] -> ({namae = ""; saitan_kyori = infinity; temae_list = []}, [])
-    | x::xs -> List.fold_right (fun s (p, v) -> 
-            match s with { namae = sn; saitan_kyori = sd; temae_list = st} -> 
-            match p with { namae = pn; saitan_kyori = pd; temae_list = pt} -> 
-                if sd < pd then (s, p::v) else (p, s::v))
-        xs
-        (x, [])
+let saitan_wo_bunri (e: eki_t) (l: eki_t list) : eki_t*(eki_t list) =
+    List.fold_right (fun s (p, v) -> 
+        match s with { namae = sn; saitan_kyori = sd; temae_list = st} -> 
+        match p with { namae = pn; saitan_kyori = pd; temae_list = pt} -> 
+            if sd < pd then (s, p::v) else (p, s::v)) l (e, [])
 
 (* 15.4 tests *)
 let s15_1 = { namae = "a"; saitan_kyori = 12.3; temae_list = ["z"; "x"]}
@@ -563,21 +560,16 @@ let rec validate_15_4 (p, v) =
         | { namae = xn; saitan_kyori = xd; temae_list = xt }::xs -> 
             if pd <= xd then validate_15_4 (p, xs) else false
 
-let test_15_4_1 = saitan_wo_bunri [] = ({namae = ""; saitan_kyori = infinity; temae_list = []}, [])
-let test_15_4_2 = validate_15_4 (saitan_wo_bunri [s15_1; s15_2; s15_3; s15_4; s15_5])
-let test_15_4_3 = validate_15_4 (saitan_wo_bunri [s15_1; s15_3; s15_1])
+(*let test_15_4_1 = saitan_wo_bunri [] = ({namae = ""; saitan_kyori = infinity; temae_list = []}, [])*)
+let test_15_4_2 = validate_15_4 (saitan_wo_bunri s15_1 [s15_2; s15_3; s15_4; s15_5])
+let test_15_4_3 = validate_15_4 (saitan_wo_bunri s15_1 [s15_3; s15_1])
 
 (* 16.4 *)
-(* 停止性: saitan_wo_bunri の出力の new_v は元の iv より短くなり最終的に [] となる *)
-let dijkstra_main (v: eki_t list) (g: ekikan_t list) : eki_t list =
-    let rec inner_loop u ip iv = match iv with
-        [] -> u
-        | x::xs ->
-            let (new_p, new_v) = saitan_wo_bunri iv in
-            let updated_v = koushin ip new_v g in
-                inner_loop (new_p :: u) new_p updated_v in
-    let (p, v0) = saitan_wo_bunri v in
-        inner_loop [] p v0
+(* 停止性: saitan_wo_bunri の出力の new_v は元の v より短くなり最終的に [] となる *)
+let rec dijkstra_main (v: eki_t list) (g: ekikan_t list) : eki_t list = match v with
+        [] -> []
+        | x::xs -> let (new_p, new_v) = saitan_wo_bunri x xs in
+                new_p :: dijkstra_main (koushin new_p new_v g) g
 
 (* 16.5 *)
 let dijkstra (start: string) (destination: string) : eki_t =
@@ -673,15 +665,10 @@ let koushin_improved (p: eki_t) (v: eki_t list) (t: ekikan_tree_t) : eki_t list 
         p
     ) v
 
-let dijkstra_main (v: eki_t list) (g: ekikan_tree_t) : eki_t list =
-    let rec inner_loop u ip iv = match iv with
-        [] -> u
-        | x::xs ->
-            let (new_p, new_v) = saitan_wo_bunri iv in
-            let updated_v = koushin_improved ip new_v g in
-                inner_loop (new_p :: u) new_p updated_v in
-    let (p, v0) = saitan_wo_bunri v in
-        inner_loop [] p v0
+let rec dijkstra_main_improved (v: eki_t list) (g: ekikan_tree_t) : eki_t list = match v with
+    [] -> []
+    | x::xs -> let (new_p, new_v) = saitan_wo_bunri x xs in
+                new_p :: dijkstra_main_improved (koushin_improved new_p new_v g) g
 
 let dijkstra_improved (start: string) (destination: string) : eki_t =
     let network = seiretsu global_ekimei_list in
@@ -691,7 +678,7 @@ let dijkstra_improved (start: string) (destination: string) : eki_t =
         | ({ namae = n; saitan_kyori = d; temae_list = l} as x)::xs -> 
             if n = dest_kj then x  else find xs in
     find (
-        dijkstra_main
+        dijkstra_main_improved
             (make_initial_eki_list network (romaji_to_kanji start network))
             (inserts_ekikan Empty global_ekikan_list))
 
