@@ -488,12 +488,12 @@ let test_12_4_2 = seiretsu [
 let test_12_4_3 = List.length (seiretsu global_ekimei_list) < List.length global_ekimei_list
 
 (* 13.6, 13.7, 14.7 *)
-let koushin (p: eki_t) (v: eki_t list) : eki_t list = 
+let koushin (p: eki_t) (v: eki_t list) (g: ekikan_t list) : eki_t list = 
     List.map (
         (fun (p: eki_t) (q: eki_t) ->
         match p with { namae = pn; saitan_kyori = pd; temae_list = pl} ->
         match q with { namae = qn; saitan_kyori = qd; temae_list = ql} ->
-        let dist = get_ekikan_kyori pn qn global_ekikan_list in
+        let dist = get_ekikan_kyori pn qn g in
             if dist +. pd < qd
                 then { namae = qn; saitan_kyori = dist +. pd; temae_list = qn::pl }
                 else q)
@@ -521,8 +521,8 @@ let s3 = { namae = "飯田橋"; saitan_kyori = 0.; temae_list = ["c"] }
 let s4 = { namae = "市ヶ谷"; saitan_kyori = infinity; temae_list = [] }
 
 (* 13.7 tests *)
-let test_13_7_1 = koushin s1 [] = []
-let test_13_7_2 = koushin s2 [s1; s2; s3; s4]
+let test_13_7_1 = koushin s1 [] global_ekikan_list = []
+let test_13_7_2 = koushin s2 [s1; s2; s3; s4] global_ekikan_list
                 = [{ namae = "護国寺"; saitan_kyori = 13.3; temae_list = ["護国寺"; "江戸川橋"; "飯田橋"] }; s2; s3; s4]
 
 (* 14.12 *)
@@ -566,3 +566,41 @@ let rec validate_15_4 (p, v) =
 let test_15_4_1 = saitan_wo_bunri [] = ({namae = ""; saitan_kyori = infinity; temae_list = []}, [])
 let test_15_4_2 = validate_15_4 (saitan_wo_bunri [s15_1; s15_2; s15_3; s15_4; s15_5])
 let test_15_4_3 = validate_15_4 (saitan_wo_bunri [s15_1; s15_3; s15_1])
+
+(* 16.4 *)
+(* 停止性: saitan_wo_bunri の出力の new_v は元の iv より短くなり最終的に [] となる *)
+let dijkstra_main (v: eki_t list) (g: ekikan_t list) : eki_t list =
+    let rec inner_loop u ip iv = match iv with
+        [] -> u
+        | x::xs ->
+            let (new_p, new_v) = saitan_wo_bunri iv in
+            let updated_v = koushin ip new_v g in
+                inner_loop (new_p :: u) new_p updated_v in
+    let (p, v0) = saitan_wo_bunri v in
+        inner_loop [] p v0
+
+(* 16.5 *)
+let dijkstra (start: string) (destination: string) : eki_t =
+    let network = seiretsu global_ekimei_list in
+    let dest_kj = romaji_to_kanji destination network in
+    let rec find l = match l with
+        [] -> { namae = ""; saitan_kyori = infinity; temae_list = []}
+        | ({ namae = n; saitan_kyori = d; temae_list = l} as x)::xs -> 
+            if n = dest_kj then x  else find xs in
+    find (
+        dijkstra_main (
+            make_initial_eki_list network 
+            (romaji_to_kanji start network))
+        global_ekikan_list)
+
+(* tests *)
+let test_dijkstra_1 = dijkstra "shinjuku" "meguro"
+let test_dijkstra_2 = dijkstra "asakusa" "ikebukuro"
+let test_dijkstra_3 = dijkstra "kitaayase" "wakousi"
+let test_dijkstra_4 = dijkstra "foo" "bar"
+let test_dijkstra_5 = dijkstra "shibuya" ""
+let test_dijkstra_6 = dijkstra "" "nedu"
+
+(* from support page: http://pllab.is.ocha.ac.jp/~asai/book-data/ex16_5.ml *)
+let test1 = dijkstra "shibuya" "gokokuji"
+let test2 = dijkstra "myogadani" "meguro"
