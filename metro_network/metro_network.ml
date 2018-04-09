@@ -362,9 +362,12 @@ let global_ekikan_list = [
 {kiten="営団成増"; shuten="和光市"; keiyu="有楽町線"; kyori=2.1; jikan=3}; 
 ] 
 
-(* 10.10 *)
+(* 18.6 *)
+exception No_such_station of string
+
+(* 10.10, 18.7 *)
 let rec romaji_to_kanji (name: string) (l: ekimei_t list) : string = match l with
-    [] -> ""
+    [] -> raise (No_such_station (name))
     | {kanji = kj; kana = kn; romaji = r; shozoku = s}::xs ->
         if name = r then kj else romaji_to_kanji name xs
 
@@ -385,14 +388,14 @@ let test_10_11_2 = get_ekikan_kyori "中野" "落合" global_ekikan_list = 2.0
 
 (* 10.12 *)
 let rec kyori_wo_hyoji (s1: string) (s2: string) : string = 
-    let station_1 = romaji_to_kanji s1 global_ekimei_list in
-    let station_2 = romaji_to_kanji s2 global_ekimei_list in
     try
+        let station_1 = romaji_to_kanji s1 global_ekimei_list in
+        let station_2 = romaji_to_kanji s2 global_ekimei_list in
         let dist = get_ekikan_kyori station_1 station_2 global_ekikan_list in
-            if station_1 = "" then s1 ^ "という駅名は存在しません"
-            else if station_2 = "" then s2 ^ "という駅名は存在しません"
-            else station_1 ^ "から" ^ station_2 ^ "までは" ^ (string_of_float dist) ^ "kmです"
-    with Not_found -> station_1 ^ "と" ^ station_2 ^ "はつながっていません"
+            station_1 ^ "から" ^ station_2 ^ "までは" ^ (string_of_float dist) ^ "kmです"
+    with 
+        Not_found -> romaji_to_kanji s1 global_ekimei_list ^ "と" ^ romaji_to_kanji s2 global_ekimei_list ^ "はつながっていません"
+        | No_such_station (n) -> n ^ "という駅名は存在しません"
 
 (* 10.12 tests *)
 let test_10_12_1 = kyori_wo_hyoji "iidabashi" "kagurazaka" = "飯田橋から神楽坂までは1.2kmです"
@@ -575,7 +578,7 @@ let rec dijkstra_main (v: eki_t list) (g: ekikan_t list) : eki_t list = match v 
                 new_p :: dijkstra_main (koushin new_p new_v g) g
 
 (* 16.5 *)
-let dijkstra (start: string) (destination: string) : eki_t =
+let dijkstra (start: string) (destination: string) : eki_t = try
     let network = seiretsu global_ekimei_list in
     let dest_kj = romaji_to_kanji destination network in
     let rec find l = match l with
@@ -586,6 +589,7 @@ let dijkstra (start: string) (destination: string) : eki_t =
         dijkstra_main
             (make_initial_eki_list network (romaji_to_kanji start network))
             global_ekikan_list)
+    with No_such_station (n) -> { namae = n; saitan_kyori = infinity; temae_list = [] }
 
 (* tests *)
 let test_dijkstra_1 = dijkstra "shinjuku" "meguro"
@@ -675,7 +679,7 @@ let rec dijkstra_main_improved (v: eki_t list) (g: ekikan_tree_t) : eki_t list =
     | x::xs -> let (new_p, new_v) = saitan_wo_bunri x xs in
                 new_p :: dijkstra_main_improved (koushin_improved new_p new_v g) g
 
-let dijkstra_improved (start: string) (destination: string) : eki_t =
+let dijkstra_improved (start: string) (destination: string) : eki_t = try
     let network = seiretsu global_ekimei_list in
     let dest_kj = romaji_to_kanji destination network in
     let rec find l = match l with
@@ -686,6 +690,7 @@ let dijkstra_improved (start: string) (destination: string) : eki_t =
         dijkstra_main_improved
             (make_initial_eki_list network (romaji_to_kanji start network))
             (inserts_ekikan Empty global_ekikan_list))
+    with No_such_station (n) -> { namae = n; saitan_kyori = infinity; temae_list = []}
 
 let time f x y = 
     let t = Sys.time() in
