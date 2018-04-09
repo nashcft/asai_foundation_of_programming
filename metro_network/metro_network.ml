@@ -372,26 +372,27 @@ let rec romaji_to_kanji (name: string) (l: ekimei_t list) : string = match l wit
 let test_10_10_1 = (romaji_to_kanji "myogadani" global_ekimei_list) = "茗荷谷"
 let test_10_10_2 = romaji_to_kanji "shinjuku" global_ekimei_list = "新宿"
 
-(* 10.11 *)
+(* 10.11, 18.4 *)
 let rec get_ekikan_kyori (s1: string) (s2: string) (l: ekikan_t list) : float = match l with
-    [] -> infinity
+    [] -> raise Not_found
     | {kiten = h; shuten = t; keiyu = e; kyori = dist; jikan = dur}::xs ->
         if (h = s1 && t = s2) || (h = s2 && t = s1) then dist else get_ekikan_kyori s1 s2 xs
 
 (* 10.11 tests *)
 let test_10_11_1 = get_ekikan_kyori "飯田橋" "神楽坂" global_ekikan_list = 1.2
 let test_10_11_2 = get_ekikan_kyori "中野" "落合" global_ekikan_list = 2.0
-let test_10_11_3 = get_ekikan_kyori "新橋" "中野" global_ekikan_list = infinity
+(* let test_10_11_3 = get_ekikan_kyori "新橋" "中野" global_ekikan_list = infinity *)
 
 (* 10.12 *)
 let rec kyori_wo_hyoji (s1: string) (s2: string) : string = 
     let station_1 = romaji_to_kanji s1 global_ekimei_list in
     let station_2 = romaji_to_kanji s2 global_ekimei_list in
-    let dist = get_ekikan_kyori station_1 station_2 global_ekikan_list in
-        if station_1 = "" then s1 ^ "という駅名は存在しません"
-        else if station_2 = "" then s2 ^ "という駅名は存在しません"
-        else if dist = infinity then station_1 ^ "と" ^ station_2 ^ "はつながっていません"
-        else station_1 ^ "から" ^ station_2 ^ "までは" ^ (string_of_float dist) ^ "kmです"
+    try
+        let dist = get_ekikan_kyori station_1 station_2 global_ekikan_list in
+            if station_1 = "" then s1 ^ "という駅名は存在しません"
+            else if station_2 = "" then s2 ^ "という駅名は存在しません"
+            else station_1 ^ "から" ^ station_2 ^ "までは" ^ (string_of_float dist) ^ "kmです"
+    with Not_found -> station_1 ^ "と" ^ station_2 ^ "はつながっていません"
 
 (* 10.12 tests *)
 let test_10_12_1 = kyori_wo_hyoji "iidabashi" "kagurazaka" = "飯田橋から神楽坂までは1.2kmです"
@@ -487,16 +488,18 @@ let test_12_4_2 = seiretsu [
 ]
 let test_12_4_3 = List.length (seiretsu global_ekimei_list) < List.length global_ekimei_list
 
-(* 13.6, 13.7, 14.7 *)
+(* 13.6, 13.7, 14.7, 18.5 *)
 let koushin (p: eki_t) (v: eki_t list) (g: ekikan_t list) : eki_t list = 
     List.map (
         (fun (p: eki_t) (q: eki_t) ->
         match p with { namae = pn; saitan_kyori = pd; temae_list = pl} ->
         match q with { namae = qn; saitan_kyori = qd; temae_list = ql} ->
-        let dist = get_ekikan_kyori pn qn g in
-            if dist +. pd < qd
-                then { namae = qn; saitan_kyori = dist +. pd; temae_list = qn::pl }
-                else q)
+        try
+            let dist = get_ekikan_kyori pn qn g in
+                if dist +. pd < qd
+                    then { namae = qn; saitan_kyori = dist +. pd; temae_list = qn::pl }
+                    else q
+        with Not_found -> q)
         p
     ) v
 
@@ -606,7 +609,7 @@ let rec assoc target (l: ('a * 'b) list) = match l with
     | (n, d)::xs -> if n = target then d else assoc target xs
 (* 17.11 tests *)
 let test_17_11_1 = assoc "b" [("a", 1.); ("b", 2.); ("c", 3.)] = 2.
-let test_17_11_2 = assoc "z" [("a", 1.); ("b", 2.); ("c", 3.)] = infinity
+(* let test_17_11_2 = assoc "z" [("a", 1.); ("b", 2.); ("c", 3.)] = infinity *)
 
 (* 17.12 *)
 let insert_ekikan (e: ekikan_t) (tree: ekikan_tree_t) : ekikan_tree_t = match e with
@@ -637,31 +640,33 @@ let test_17_12_3 = insert_ekikan test_edge test_tree2
 (* 17.13 *)
 let inserts_ekikan (t: ekikan_tree_t) (l: ekikan_t list) : ekikan_tree_t = List.fold_right insert_ekikan l t
 
-(* 17.14 *)
+(* 17.14, 18.4 *)
 let rec get_ekikan_kyori_improved (s1: string) (s2: string) (t: ekikan_tree_t) : float = 
     let rec find s l = match l with
-        [] -> infinity
+        [] -> raise Not_found
         | (n, dist)::xs -> if n = s then dist else find s xs in
     match t with
-        Empty -> infinity
+        Empty -> raise Not_found
         | Node (n, lst, l, r) -> if n = s1 then find s2 lst
                                     else if n > s1 then get_ekikan_kyori_improved s1 s2 l
                                     else get_ekikan_kyori_improved s1 s2 r
 (* 17.14 tests *)
 let test_17_14_1 = get_ekikan_kyori_improved "飯田橋" "神楽坂" (inserts_ekikan Empty global_ekikan_list) = 1.2
 let test_17_14_2 = get_ekikan_kyori_improved "中野" "落合" (inserts_ekikan Empty global_ekikan_list) = 2.0
-let test_17_14_3 = get_ekikan_kyori_improved "新橋" "中野" (inserts_ekikan Empty global_ekikan_list) = infinity
+(* let test_17_14_3 = get_ekikan_kyori_improved "新橋" "中野" (inserts_ekikan Empty global_ekikan_list) = infinity *)
 
-(* 17.15 *)
+(* 17.15, 18.5 *)
 let koushin_improved (p: eki_t) (v: eki_t list) (t: ekikan_tree_t) : eki_t list = 
     List.map (
         (fun (p: eki_t) (q: eki_t) ->
         match p with { namae = pn; saitan_kyori = pd; temae_list = pl} ->
         match q with { namae = qn; saitan_kyori = qd; temae_list = ql} ->
-        let dist = get_ekikan_kyori_improved pn qn t in
+        try
+            let dist = get_ekikan_kyori_improved pn qn t in
             if dist +. pd < qd
                 then { namae = qn; saitan_kyori = dist +. pd; temae_list = qn::pl }
-                else q)
+                else q
+        with Not_found -> q)
         p
     ) v
 
