@@ -646,12 +646,9 @@ let inserts_ekikan (t: ekikan_tree_t) (l: ekikan_t list) : ekikan_tree_t = List.
 
 (* 17.14, 18.4 *)
 let rec get_ekikan_kyori_improved (s1: string) (s2: string) (t: ekikan_tree_t) : float = 
-    let rec find s l = match l with
-        [] -> raise Not_found
-        | (n, dist)::xs -> if n = s then dist else find s xs in
     match t with
         Empty -> raise Not_found
-        | Node (n, lst, l, r) -> if n = s1 then find s2 lst
+        | Node (n, lst, l, r) -> if n = s1 then assoc s2 lst
                                     else if n > s1 then get_ekikan_kyori_improved s1 s2 l
                                     else get_ekikan_kyori_improved s1 s2 r
 (* 17.14 tests *)
