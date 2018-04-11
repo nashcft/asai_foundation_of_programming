@@ -30,3 +30,9 @@
 # #use "filename.ml";;
  ```
 - It seems that files only in current directory can be loaded
+
+[OCamlMakefile](https://github.com/mmottl/ocaml-makefile)
+```
+> opam install ocaml-makefile
+> ln -s ~/.opam/<path-to-OcamlMakefile> <target-directory>
+```
