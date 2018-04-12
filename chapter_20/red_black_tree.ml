@@ -44,3 +44,24 @@ let test_20_3_3 = insert (Node ("d", 1, Black, Node("c", 1, Red, Empty, Empty), 
 let test_20_3_4 = insert (Node ("d", 1, Black, Node("c", 1, Red, Empty, Empty), Empty)) "a" 1 =
     Node ("c", 1, Black, Node("a", 1, Black, Empty, Empty), Node("d", 1, Black, Empty, Empty))
 *)
+
+let rec search tree key = match tree with
+    Empty -> raise Not_found
+    | Node (k, v, c, l, r) ->
+        if k = key then v
+        else if k > key then search l key
+        else search r key
+
+(*
+let target = 
+    Node ("f", 6, Black,
+        Node ("c", 3, Black,
+            Node ("a", 1, Red, Empty, Empty),
+            Node ("e", 5, Red, Empty, Empty)),
+        Node ("h", 8, Black, 
+            Empty,
+            Node("r", 18, Red, Empty, Empty)))
+let test_20_4_1 = search target "c" = 3
+let test_20_4_2 = search target "r" = 18
+let test_20_4_3 = (try search target "j" with Not_found -> 0) = 0
+*)
