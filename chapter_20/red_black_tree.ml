@@ -3,6 +3,8 @@ type ('a, 'b) rb_tree_t =
     Empty
     | Node of 'a * 'b * color_t * ('a, 'b) rb_tree_t * ('a, 'b) rb_tree_t
 
+let empty = Empty
+
 let balance tree = match tree with
     Node (zk, zv, Black, Node (yk, yv, Red, Node (xk, xv, Red, a, b), c), d)
     | Node (zk, zv, Black, Node (xk, xv, Red, a, Node (yk, yv, Red, b, c)), d)
