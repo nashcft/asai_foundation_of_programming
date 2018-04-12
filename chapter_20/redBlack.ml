@@ -1,7 +1,7 @@
 type color_t = Red | Black
-type ('a, 'b) rb_tree_t =
+type ('a, 'b) t =
     Empty
-    | Node of 'a * 'b * color_t * ('a, 'b) rb_tree_t * ('a, 'b) rb_tree_t
+    | Node of 'a * 'b * color_t * ('a, 'b) t * ('a, 'b) t
 
 let empty = Empty
 
